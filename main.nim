@@ -10,21 +10,21 @@ proc isExecutable(path: string): bool =
 proc isDirectory(path: string): bool =
   return path.dirExists()
 
+proc isFile(path: string): bool =
+  return path.fileExists()
+
 proc processEntry(path: string): string =
   var entryParts = splitFile(path)
   var icon: string
 
-  if Icons["ext"].hasKey(entryParts.ext):
-    icon = Icons["ext"][entryParts.ext]
+  if path.isFile():
+    icon = Icons["ext"].getOrDefault(entryParts.ext, Icons["other"]["plainFile"])
   elif path.isDirectory():
     icon = Icons["directories"].getOrDefault(entryParts.name, Icons["other"]["directory"])
-  else:
-    icon = Icons["other"]["plainFile"]
-
+  
   if path.isExecutable():
     # TODO: Add green color to executable files
-    if icon == Icons["other"]["plainFile"]:
-      icon = Icons["other"]["executable"]
+    icon = Icons["other"]["executable"]
 
   return "{icon} {entryParts.name}{entryParts.ext}".fmt()
 
