@@ -1,5 +1,6 @@
 import os
 import tables
+import strformat
 
 const Icons = {
   "ext": {
@@ -7,32 +8,37 @@ const Icons = {
     ".py": "󰌠",
     ".conf": "",
     ".toml": "",
-    ".yaml": "e",
+    ".yaml": "",
     ".jpg": "",
     ".png": "",
     ".html": "",
     ".css": "󰌜",
-    ".js": "󰌞",
+    ".js": "",
+    ".ts": "",
     ".nim": "",
     ".md": "󰍔",
     ".cpp": "󰙲",
     ".c": "󰙱",
     ".ipynb": "",
-    ".json": "",
-    ".csv": "",
-    ".txt": "",
-    ".jsx": "",
-    ".tsx": "",
+    ".json": "",
+    ".csv": "",
+    ".txt": "",
+    ".jsx": "",
+    ".tsx": "",
   }.toTable(),
 
   "name": {
-    "Dockerfile": "",
-    "node_modules": "",
-    "Videos": "",
-    "Documents": "",
-    "Downloads": "",
-    "Music": "",
-    "Desktop": "",
+    "Dockerfile": "",
+  }.toTable(),
+
+  "directories": {
+    "node_modules": "",
+    "Videos": "",
+    "Documents": "",
+    "Downloads": "󰇚",
+    "Music": "󰝚",
+    "Desktop": "",
+    "src": "󱃖",
   }.toTable(),
 
   "other": {
@@ -42,26 +48,33 @@ const Icons = {
   }.toTable(),
 }.toTable()
 
-proc processEntry(path: string) =
+proc isExecutable(path: string): bool =
+  var permissions = path.getFilePermissions()
+  return permissions.contains(fpUserExec)
+
+proc isDirectory(path: string): bool =
+  return path.dirExists()
+
+proc processEntry(path: string): string =
   var entryParts = splitFile(path)
   var icon: string
 
-  if entryParts.ext == "":
-    if path.dirExists():
-      icon = Icons["other"]["directory"]
-    elif path.fileExists():
-      icon = " "
-    else:
-      icon = " "
-  elif not Icons["ext"].hasKey(entryParts.ext):
-    icon = " "
-  else:
+  if Icons["ext"].hasKey(entryParts.ext):
     icon = Icons["ext"][entryParts.ext]
+  elif path.isDirectory():
+    icon = Icons["directories"].getOrDefault(entryParts.name, Icons["other"]["directory"])
+  else:
+    icon = Icons["other"]["plainFile"]
 
-  echo icon & " " & entryParts.name & entryParts.ext
+  if path.isExecutable():
+    # TODO: Add green color to executable files
+    if icon == Icons["other"]["plainFile"]:
+      icon = Icons["other"]["executable"]
+
+  return "{icon} {entryParts.name}{entryParts.ext}".fmt()
 
 
 var currentDir = os.getCurrentDir()
 
 for entry in os.walkDir(currentDir):
-  processEntry(entry.path)
+   echo processEntry(entry.path)
