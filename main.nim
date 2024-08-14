@@ -1,52 +1,7 @@
 import os
 import tables
 import strformat
-
-const Icons = {
-  "ext": {
-    ".go": "󰟓",
-    ".py": "󰌠",
-    ".conf": "",
-    ".toml": "",
-    ".yaml": "",
-    ".jpg": "",
-    ".png": "",
-    ".html": "",
-    ".css": "󰌜",
-    ".js": "",
-    ".ts": "",
-    ".nim": "",
-    ".md": "󰍔",
-    ".cpp": "󰙲",
-    ".c": "󰙱",
-    ".ipynb": "",
-    ".json": "",
-    ".csv": "",
-    ".txt": "",
-    ".jsx": "",
-    ".tsx": "",
-  }.toTable(),
-
-  "name": {
-    "Dockerfile": "",
-  }.toTable(),
-
-  "directories": {
-    "node_modules": "",
-    "Videos": "",
-    "Documents": "",
-    "Downloads": "󰇚",
-    "Music": "󰝚",
-    "Desktop": "",
-    "src": "󱃖",
-  }.toTable(),
-
-  "other": {
-    "directory": "",
-    "executable": "",
-    "plainFile": "",
-  }.toTable(),
-}.toTable()
+from icons import Icons
 
 proc isExecutable(path: string): bool =
   var permissions = path.getFilePermissions()
