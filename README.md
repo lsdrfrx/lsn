@@ -7,7 +7,7 @@ This project is a rewrite of GNU ls with additional features. The project is on 
 ### Manual
 Compilation with Nim is very simple:
 ```
-nim c main.nim
+nim c src/main.nim
 ```
 
 ### From binaries
