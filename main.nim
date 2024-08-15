@@ -12,10 +12,11 @@ type Entry = (ForegroundColor, string)
 
 var directory: string
 
-var showHidden   = false        # -a
-var showList     = false        # -l
-var showMeta     = false        # -m
-var showDirsOnly = false        # -d
+var showHidden    = false        # -a
+var showList      = false        # -l
+var showMeta      = false        # -m
+var showDirsOnly  = false        # -d
+var showFilesOnly = false        # -f
 
 proc parseCommandLineArgs() =
   var p = initOptParser(commandLineParams())
@@ -26,10 +27,11 @@ proc parseCommandLineArgs() =
     of cmdEnd: break
     of cmdShortOption, cmdLongOption:
       case p.key:
-      of "a": showHidden   = true
-      of "l": showList     = true
-      of "m": showMeta     = true
-      of "d": showDirsOnly = true
+      of "a": showHidden    = true
+      of "l": showList      = true
+      of "m": showMeta      = true
+      of "d": showDirsOnly  = true
+      of "f": showFilesOnly = true
     of cmdArgument:
       directory = p.key
 
@@ -53,6 +55,9 @@ proc processEntry(path: string): Option[Entry] =
 
   if showDirsOnly:
     if path.isFile(): return none(Entry)
+
+  if showFilesOnly:
+    if path.isDirectory(): return none(Entry)
 
   if path.isFile():
     color = fgDefault
