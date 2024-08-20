@@ -86,15 +86,16 @@ if isMainModule:
     if processed.isSome:
       entries.add(processed.get())
 
-  let maxWordLength = entries.mapIt(it[1].len()).max()
-  let maxWordsPerLine = terminalWidth() div (maxWordLength + 2)
+  if entries.len() != 0:
+    let maxWordLength = entries.mapIt(it[1].len()).max()
+    let maxWordsPerLine = terminalWidth() div (maxWordLength + 2)
 
-  for i in 0 ..< entries.len():
-    if not showList:
-      stdout.styledWrite(entries[i][0], alignLeft(entries[i][1], maxWordLength + 2))
-      if (i + 1) mod maxWordsPerLine == 0:
-        echo ""
-    else:
-      stdout.styledWriteLine(entries[i][0], entries[i][1])
+    for i in 0 ..< entries.len():
+      if not showList:
+        stdout.styledWrite(entries[i][0], alignLeft(entries[i][1], maxWordLength + 2))
+        if (i + 1) mod maxWordsPerLine == 0:
+          echo ""
+      else:
+        stdout.styledWriteLine(entries[i][0], entries[i][1])
 
-  if not showList: echo ""
+    if not showList: echo ""
