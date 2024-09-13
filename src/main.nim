@@ -10,30 +10,16 @@ import parseopt
 import times
 
 from icons import Icons
+from entry import Entry
+import colors
 
 var directory: string
-
-let
-    red = "\e[31m"
-    yellow = "\e[33m"
-    cyan = "\e[36m"
-    green = "\e[32m"
-    blue = "\e[34m"
-    def = "\e[0m"
 
 var showHidden    = false        # -a
 var showList      = false        # -l
 var showMeta      = false        # -m
 var showDirsOnly  = false        # -d
 var showFilesOnly = false        # -f
-
-type Entry = object
-  path: string
-  name: string
-  icon: string
-  meta: string
-  color: string
-  length: int
 
 proc parseCommandLineArgs() =
   var p = initOptParser(commandLineParams())
@@ -65,7 +51,7 @@ proc isExecutable(path: string): bool =
   return permissions.contains(fpUserExec) and path.isFile()
 
 proc alignLeftWithANSISequences(e: Entry, length: int): string =
-  "{e.color}{e.icon} {e.name}{def}{repeat(' ', length - e.length + 2)}".fmt()
+  "{e.meta} {e.color}{e.icon} {e.name}{def}{repeat(' ', length - e.length + 2)}".fmt()
 
 proc getPermissionString(info: FileInfo): string =
   result &= (if info.kind == pcDir: "{blue}d{def}".fmt() else: ".")
@@ -144,6 +130,6 @@ if isMainModule:
         if (i + 1) mod maxWordsPerLine == 0:
           echo ""
       else:
-        stdout.writeLine(entries[i])
+        stdout.writeLine("{entries[i].meta} {entries[i].color}{entries[i].icon} {entries[i].name}{def}".fmt())
 
     if not showList: echo ""
