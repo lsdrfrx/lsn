@@ -3,11 +3,11 @@ import tables
 import strformat
 import sequtils
 import unicode
+from strutils import repeat
 import options
 import terminal
 import parseopt
 import times
-import re
 
 from icons import Icons
 
@@ -27,6 +27,14 @@ var showMeta      = false        # -m
 var showDirsOnly  = false        # -d
 var showFilesOnly = false        # -f
 
+type Entry = object
+  path: string
+  name: string
+  icon: string
+  meta: string
+  color: string
+  length: int
+
 proc parseCommandLineArgs() =
   var p = initOptParser(commandLineParams())
 
@@ -44,7 +52,7 @@ proc parseCommandLineArgs() =
       of "d": showDirsOnly  = true
       of "f": showFilesOnly = true
     of cmdArgument:
-      directory = p.key
+      directory = p.key         #
 
 proc isDirectory(path: string): bool =
   return path.dirExists()
@@ -56,10 +64,8 @@ proc isExecutable(path: string): bool =
   var permissions = path.getFilePermissions()
   return permissions.contains(fpUserExec) and path.isFile()
 
-proc alignLeftWithANSISequences(s: string): string =
-  let escaped: string = s.replace(re(r"(\\e\[[0-9]+m)"), "1")
-  echo escaped
-  echo escaped.len()
+proc alignLeftWithANSISequences(e: Entry, length: int): string =
+  "{e.color}{e.icon} {e.name}{def}{repeat(' ', length - e.length + 2)}".fmt()
 
 proc getPermissionString(info: FileInfo): string =
   result &= (if info.kind == pcDir: "{blue}d{def}".fmt() else: ".")
@@ -77,31 +83,32 @@ proc getPermissionString(info: FileInfo): string =
   if info.permissions.contains(fpOthersExec): result &= "{red}x{def}".fmt() else: result &= "-"
 
 
-proc processEntry(path: string): Option[string] =
-  var entryParts = splitFile(path)
-  var icon: string
-  var entry: string
+proc processEntry(path: string): Option[Entry] =
+  let entryParts = splitFile(path)
+  var entry = Entry()
 
   if not showHidden:
-    if entryParts.name[0] == '.': return none(string)
+    if entryParts.name[0] == '.': return none(Entry)
 
   if showDirsOnly:
-    if path.isFile(): return none(string)
+    if path.isFile(): return none(Entry)
 
   if showFilesOnly:
-    if path.isDirectory(): return none(string)
+    if path.isDirectory(): return none(Entry)
+
+  entry.name = "{entryParts.name}{entryParts.ext}".fmt()
+  entry.length = entry.name.len() + 2  # + icon and space chars
 
   if path.isFile():
-    icon = Icons["ext"].getOrDefault(entryParts.ext, Icons["other"]["plainFile"])
-    entry = "{icon} {entryParts.name}{entryParts.ext}".fmt()
+    entry.icon = Icons["ext"].getOrDefault(entryParts.ext, Icons["other"]["plainFile"])
   elif path.isDirectory():
-    icon = Icons["directories"].getOrDefault(entryParts.name, Icons["other"]["directory"])
-    entry = "{blue}{icon} {entryParts.name}{entryParts.ext}{def}".fmt()
+    entry.icon = Icons["directories"].getOrDefault(entryParts.name, Icons["other"]["directory"])
+    entry.color = blue
   
   if path.isExecutable():
-    if icon == Icons["other"]["plainFile"]:
-      icon = Icons["other"]["executable"]
-    entry = "{green}{icon} {entryParts.name}{entryParts.ext}{def}".fmt()
+    if entry.icon == Icons["other"]["plainFile"]:
+      entry.icon = Icons["other"]["executable"]
+    entry.color = green
 
   if showMeta:
     let info = path.getFileInfo()
@@ -110,7 +117,7 @@ proc processEntry(path: string): Option[string] =
 
     let entryPermissions = getPermissionString(info)
 
-    return some("{entryPermissions} {yellow}{entrySize}{def} {green}{lastUpdated}{def} {entry}".fmt())
+    entry.meta = "{entryPermissions} {yellow}{entrySize}{def} {green}{lastUpdated}{def}".fmt()
 
   return some(entry)
 
@@ -120,7 +127,7 @@ if isMainModule:
   if directory == "":
     directory = os.getCurrentDir()
 
-  var entries: seq[string] = @[]
+  var entries: seq[Entry] = @[]
 
   for entry in os.walkDir(directory):
     var processed = processEntry(entry.path)
@@ -128,13 +135,12 @@ if isMainModule:
       entries.add(processed.get())
 
   if entries.len() != 0:
-    let maxWordLength = entries.mapIt(it.len()).max()
+    let maxWordLength = entries.mapIt(it.name.len()).max()
     let maxWordsPerLine = terminalWidth() div (maxWordLength + 2)
 
     for i in 0 ..< entries.len():
-      echo alignLeftWithANSISequences(entries[i])
       if not showList:
-        stdout.write(alignLeft(entries[i], maxWordLength + 2))
+        stdout.write(alignLeftWithANSISequences(entries[i], maxWordLength + 2))
         if (i + 1) mod maxWordsPerLine == 0:
           echo ""
       else:
