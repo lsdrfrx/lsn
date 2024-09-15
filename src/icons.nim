@@ -1,4 +1,4 @@
-import tables
+import std/tables
 
 let Icons* = {
   "ext": {
@@ -34,7 +34,7 @@ let Icons* = {
     ".rs":    "",
     ".svg":   "",
     ".mp4":   "",
-    
+
   }.toTable(),
 
   "name": {

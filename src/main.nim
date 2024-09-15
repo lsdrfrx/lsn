@@ -1,17 +1,6 @@
-import os
-import tables
-import strformat
-import sequtils
-import unicode
+import std/[os, tables, strformat, sequtils, unicode, options, terminal, parseopt, times]
+import icons, entry, colors
 from strutils import repeat
-import options
-import terminal
-import parseopt
-import times
-
-from icons import Icons
-from entry import Entry
-import colors
 
 var directory: string
 
@@ -90,7 +79,7 @@ proc processEntry(path: string): Option[Entry] =
   elif path.isDirectory():
     entry.icon = Icons["directories"].getOrDefault(entryParts.name, Icons["other"]["directory"])
     entry.color = blue
-  
+
   if path.isExecutable():
     if entry.icon == Icons["other"]["plainFile"]:
       entry.icon = Icons["other"]["executable"]
